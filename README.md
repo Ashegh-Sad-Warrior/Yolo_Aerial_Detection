@@ -156,15 +156,7 @@ To install the required libraries, run:
 
 ```bash
 pip install -r requirements.txt
+```
 
 
-
-- **Add a `requirements.txt` File:**
-- Including a `requirements.txt` file helps others easily set up the necessary environment by running:
- ```bash
- pip install -r requirements.txt
-
-By following these guidelines and ensuring that your Markdown syntax is correct, your README file will be well-structured, easy to read, and professional, making it easier for others to understand, use, and contribute to your YOLO Aerial Detection Model on Hugging Face.
-
-If you need further assistance or have specific sections you'd like to refine, feel free to ask!
 
