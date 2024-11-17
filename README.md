@@ -67,6 +67,10 @@ Below are the various evaluation results obtained during the training and testin
 1. **Clone this repository.**
 2. **Load the model using the Ultralytics YOLO library.**
 3. **Use the model for object detection on aerial images.**
+## Demo Video
+
+![Watch the video](demo_yolo_aerial_detection.mp4)
+
 
 ```python
 import cv2
