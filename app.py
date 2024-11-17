@@ -10,65 +10,65 @@ import numpy as np
 import tempfile
 import os
 
-# بررسی وجود فایل مدل
-if os.path.exists('best.pt'):
+# Check if the model file exists
+if os.path.exists('/content/best.pt'):
     print("Model file found.")
 else:
     print("Model file not found. Please upload 'best.pt' to the Space.")
 
-# بارگذاری مدل آموزش‌دیده شما
-model = YOLO('best.pt')  # مسیر مدل را به صورت نسبی تنظیم کنید
+# Load your trained model
+model = YOLO('best.pt')  # Adjust the model path accordingly
 
-# تعریف نام کلاس‌ها به انگلیسی و فارسی
+# Define class names in English
 class_names = {
-    0: ('plane', 'هواپیما'),
-    1: ('ship', 'کشتی'),
-    2: ('storage tank', 'مخزن ذخیره'),
-    3: ('baseball diamond', 'زمین بیسبال'),
-    4: ('tennis court', 'زمین تنیس'),
-    5: ('basketball court', 'زمین بسکتبال'),
-    6: ('ground track field', 'زمین دو و میدانی'),
-    7: ('harbor', 'بندرگاه'),
-    8: ('bridge', 'پل'),
-    9: ('large vehicle', 'خودرو بزرگ'),
-    10: ('small vehicle', 'خودرو کوچک'),
-    11: ('helicopter', 'هلیکوپتر'),
-    12: ('roundabout', 'میدان'),
-    13: ('soccer ball field', 'زمین فوتبال'),
-    14: ('swimming pool', 'استخر شنا')
+    0: 'plane',
+    1: 'ship',
+    2: 'storage tank',
+    3: 'baseball diamond',
+    4: 'tennis court',
+    5: 'basketball court',
+    6: 'ground track field',
+    7: 'harbor',
+    8: 'bridge',
+    9: 'large vehicle',
+    10: 'small vehicle',
+    11: 'helicopter',
+    12: 'roundabout',
+    13: 'soccer ball field',
+    14: 'swimming pool'
 }
 
-# رنگ‌ها برای هر کلاس (BGR برای OpenCV)
+# Define colors for each class (BGR for OpenCV)
 colors = {
-    0: (255, 0, 0),       # قرمز
-    1: (0, 255, 0),       # سبز
-    2: (0, 0, 255),       # آبی
-    3: (255, 255, 0),     # زرد
-    4: (255, 0, 255),     # مجنتا
-    5: (0, 255, 255),     # فیروزه‌ای
-    6: (128, 0, 128),     # بنفش
-    7: (255, 165, 0),     # نارنجی
-    8: (0, 128, 0),       # سبز تیره
-    9: (128, 128, 0),     # زیتونی
-    10: (0, 255, 0),      # سبز روشن برای class_id=10
-    11: (0, 128, 128),    # سبز نفتی
-    12: (0, 0, 128),      # نیوی
-    13: (75, 0, 130),     # ایندیگو
-    14: (199, 21, 133)    # رز متوسط
+    0: (255, 0, 0),       # Red
+    1: (0, 255, 0),       # Green
+    2: (0, 0, 255),       # Blue
+    3: (255, 255, 0),     # Yellow
+    4: (255, 0, 255),     # Magenta
+    5: (0, 255, 255),     # Cyan
+    6: (128, 0, 128),     # Purple
+    7: (255, 165, 0),     # Orange
+    8: (0, 128, 0),       # Dark Green
+    9: (128, 128, 0),     # Olive
+    10: (0, 255, 0),      # Light Green for class_id=10
+    11: (0, 128, 128),    # Teal
+    12: (0, 0, 128),      # Navy
+    13: (75, 0, 130),     # Indigo
+    14: (199, 21, 133)    # Medium Violet Red
 }
 
-# تابع برای تشخیص اشیاء در تصاویر
+# Function to detect objects in images
 def detect_and_draw_image(input_image):
     try:
-        # تبدیل تصویر PIL به آرایه NumPy (RGB)
+        # Convert PIL image to a NumPy array (RGB)
         input_image_np = np.array(input_image)
         print("Image converted to NumPy array.")
 
-        # اجرای مدل روی تصویر با استفاده از آرایه NumPy (RGB)
+        # Run the model on the image using the NumPy array (RGB)
         results = model.predict(source=input_image_np, conf=0.3)
         print("Model prediction completed.")
 
-        # دسترسی به نتایج OBB
+        # Access Oriented Bounding Box (OBB) results
         if hasattr(results[0], 'obb') and results[0].obb is not None:
             obb_results = results[0].obb
             print("Accessed obb_results.")
@@ -76,49 +76,48 @@ def detect_and_draw_image(input_image):
             print("No 'obb' attribute found in results[0].")
             obb_results = None
 
-        # بررسی وجود جعبه‌های شناسایی شده
+        # Check if any detections are found
         if obb_results is None or len(obb_results.data) == 0:
-            print("هیچ شیء شناسایی نشده است.")
+            print("No objects detected.")
             df = pd.DataFrame({
-                'Label (English)': [],
-                'Label (Persian)': [],
+                'Label': [],
                 'Object Count': []
             })
             return input_image, df
 
         counts = {}
-        # پردازش نتایج و رسم جعبه‌ها
+        # Process results and draw bounding boxes
         for obb, conf, cls in zip(obb_results.data.cpu().numpy(), obb_results.conf.cpu().numpy(), obb_results.cls.cpu().numpy()):
             x_center, y_center, width, height, rotation = obb[:5]
             class_id = int(cls)
             confidence = float(conf)
 
-            # رسم جعبه چرخان با استفاده از OpenCV
-            rect = ((x_center, y_center), (width, height), rotation * 180.0 / np.pi)  # تبدیل رادیان به درجه
+            # Draw the rotated bounding box using OpenCV
+            rect = ((x_center, y_center), (width, height), rotation * 180.0 / np.pi)  # Convert radians to degrees
             box_points = cv2.boxPoints(rect)
             box_points = np.int0(box_points)
             color = colors.get(class_id, (0, 255, 0))
-            cv2.drawContours(input_image_np, [box_points], 0, color, 2)
+            cv2.drawContours(input_image_np, [box_points], 0, color, 1)  # Set thickness to 1
             print(f"Drawn OBB for class_id {class_id} with confidence {confidence}.")
 
-            # رسم برچسب
-            label_en, label_fa = class_names.get(class_id, ('unknown', 'ناشناخته'))
-            cv2.putText(input_image_np, f'{label_en}: {confidence:.2f}',
-                        (int(x_center), int(y_center)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2, cv2.LINE_AA)
+            # Draw label with appropriate position and reduced thickness
+            label = class_names.get(class_id, 'unknown')
+            text_position = (int(x_center), int(y_center) - int(height / 2) - 10)
+            cv2.putText(input_image_np, f'{label}: {confidence:.2f}',
+                        text_position,
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)  # Set font thickness to 1
 
-            # شمارش اشیاء
-            counts[label_en] = counts.get(label_en, 0) + 1
+            # Count detected objects
+            counts[label] = counts.get(label, 0) + 1
 
-        # تبدیل تصویر به RGB برای Gradio
+        # Convert image to RGB for Gradio
         image_rgb = cv2.cvtColor(input_image_np, cv2.COLOR_BGR2RGB)
         output_image = Image.fromarray(image_rgb)
         print("Image converted back to RGB for Gradio.")
 
-        # ایجاد DataFrame برای نمایش نتایج
+        # Create DataFrame to display results
         df = pd.DataFrame({
-            'Label (English)': list(counts.keys()),
-            'Label (Persian)': [class_names.get(k, ('unknown', 'ناشناخته'))[1] for k in counts.keys()],
+            'Label': list(counts.keys()),
             'Object Count': list(counts.values())
         })
         print("DataFrame created.")
@@ -128,13 +127,12 @@ def detect_and_draw_image(input_image):
     except Exception as e:
         print(f"Error in detect_and_draw_image: {e}")
         df = pd.DataFrame({
-            'Label (English)': [],
-            'Label (Persian)': [],
+            'Label': [],
             'Object Count': []
         })
         return input_image, df
 
-# تابع برای تشخیص اشیاء در ویدئوها
+# Function to detect objects in videos
 def detect_and_draw_video(video_path):
     try:
         cap = cv2.VideoCapture(video_path)
@@ -147,17 +145,17 @@ def detect_and_draw_video(video_path):
             if not ret:
                 break
 
-            frame_count +=1
+            frame_count += 1
             print(f"Processing frame {frame_count}")
 
-            # تغییر اندازه فریم
+            # Resize the frame
             frame = cv2.resize(frame, (640, 480))
 
-            # اجرای مدل روی فریم
+            # Run the model on the frame
             results = model.predict(source=frame, conf=0.3)
             print(f"Model prediction completed for frame {frame_count}.")
 
-            # دسترسی به نتایج OBB
+            # Access Oriented Bounding Box (OBB) results
             if hasattr(results[0], 'obb') and results[0].obb is not None:
                 obb_results = results[0].obb
                 print("Accessed obb_results for frame.")
@@ -171,22 +169,23 @@ def detect_and_draw_video(video_path):
                     class_id = int(cls)
                     confidence = float(conf)
 
-                    # رسم جعبه چرخان با استفاده از OpenCV
+                    # Draw rotated bounding box using OpenCV
                     rect = ((x_center, y_center), (width, height), rotation * 180.0 / np.pi)
                     box_points = cv2.boxPoints(rect)
                     box_points = np.int0(box_points)
                     color = colors.get(class_id, (0, 255, 0))
-                    cv2.drawContours(frame, [box_points], 0, color, 2)
+                    cv2.drawContours(frame, [box_points], 0, color, 1)  # Set thickness to 1
                     print(f"Drawn OBB for class_id {class_id} with confidence {confidence} in frame {frame_count}.")
 
-                    # رسم برچسب
-                    label_en, label_fa = class_names.get(class_id, ('unknown', 'ناشناخته'))
-                    cv2.putText(frame, f"{label_en}: {confidence:.2f}",
-                                (int(x_center), int(y_center)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                    # Draw label with appropriate position and reduced thickness
+                    label = class_names.get(class_id, 'unknown')
+                    text_position = (int(x_center), int(y_center) - int(height / 2) - 10)
+                    cv2.putText(frame, f"{label}: {confidence:.2f}",
+                                text_position,
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)  # Set font thickness to 1
 
-                    # شمارش اشیاء
-                    overall_counts[label_en] = overall_counts.get(label_en, 0) + 1
+                    # Count detected objects
+                    overall_counts[label] = overall_counts.get(label, 0) + 1
 
             frames.append(frame)
             print(f"Frame {frame_count} processed.")
@@ -194,7 +193,7 @@ def detect_and_draw_video(video_path):
         cap.release()
         print("Video processing completed.")
 
-        # ذخیره ویدئو پردازش‌شده در یک فایل موقت
+        # Save processed video to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmpfile:
             output_path = tmpfile.name
         print(f"Saving processed video to {output_path}")
@@ -208,10 +207,9 @@ def detect_and_draw_video(video_path):
         out.release()
         print("Video saved.")
 
-        # ایجاد DataFrame برای ذخیره نتایج
+        # Create DataFrame to store results
         df = pd.DataFrame({
-            'Label (English)': list(overall_counts.keys()),
-            'Label (Persian)': [class_names.get(k, ('unknown', 'ناشناخته'))[1] for k in overall_counts.keys()],
+            'Label': list(overall_counts.keys()),
             'Object Count': list(overall_counts.values())
         })
         print("DataFrame created.")
@@ -220,40 +218,39 @@ def detect_and_draw_video(video_path):
 
     except Exception as e:
         print(f"Error in detect_and_draw_video: {e}")
-        # در صورت بروز خطا، بازگرداندن ویدئوی اصلی بدون تغییر و یک DataFrame خالی
+        # In case of an error, return the original video and an empty DataFrame
         return video_path, pd.DataFrame({
-            'Label (English)': [],
-            'Label (Persian)': [],
+            'Label': [],
             'Object Count': []
         })
 
-# رابط کاربری Gradio برای تصاویر
+# Gradio interface for images
 image_interface = gr.Interface(
     fn=detect_and_draw_image,
-    inputs=gr.Image(type="pil", label="بارگذاری تصویر"),
-    outputs=[gr.Image(type="pil", label="تصویر پردازش شده"), gr.Dataframe(label="تعداد اشیاء")],
-    title="تشخیص اشیاء در تصاویر هوایی",
-    description="یک تصویر هوایی بارگذاری کنید تا اشیاء شناسایی شده و تعداد آن‌ها را ببینید.",
+    inputs=gr.Image(type="pil", label="Upload Image"),
+    outputs=[gr.Image(type="pil", label="Processed Image"), gr.Dataframe(label="Object Counts")],
+    title="Object Detection in Aerial Images",
+    description="Upload an aerial image to see detected objects and their counts.",
     examples=[
-        'Examples/images/areial_car.jpg',
-        'Examples/images/arieal_car_1.jpg',
-        'Examples/images/t.jpg'
+        '/content/EXAMPLES/IMAGES/Examples_images_areial_car.jpg',
+        '/content/EXAMPLES/IMAGES/Examples_images_images.jpg',
+        '/content/EXAMPLES/IMAGES/Examples_images_t.jpg'
     ]
 )
 
-# رابط کاربری Gradio برای ویدئوها
+# Gradio interface for videos
 video_interface = gr.Interface(
     fn=detect_and_draw_video,
-    inputs=gr.Video(label="بارگذاری ویدئو"),
-    outputs=[gr.Video(label="ویدئوی پردازش شده"), gr.Dataframe(label="تعداد اشیاء")],
-    title="تشخیص اشیاء در ویدئوها",
-    description="یک ویدئو بارگذاری کنید تا اشیاء شناسایی شده و تعداد آن‌ها را ببینید.",
+    inputs=gr.Video(label="Upload Video"),
+    outputs=[gr.Video(label="Processed Video"), gr.Dataframe(label="Object Counts")],
+    title="Object Detection in Videos",
+    description="Upload a video to see detected objects and their counts.",
     examples=[
-        'Examples/video/city.mp4',
-        'Examples/video/airplane.mp4'
+        '/content/EXAMPLES/VIDEO/airplane.mp4',
+        '/content/EXAMPLES/VIDEO/city.mp4'
     ]
 )
 
-# اجرای برنامه با استفاده از رابط کاربری تب‌دار
-app = gr.TabbedInterface([image_interface, video_interface], ["تشخیص تصویر", "تشخیص ویدئو"])
+# Launch the app using a tabbed interface
+app = gr.TabbedInterface([image_interface, video_interface], ["Image Detection", "Video Detection"])
 app.launch()
