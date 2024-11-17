@@ -70,7 +70,7 @@ Below are the various evaluation results obtained during the training and testin
 ## Demo Video and gif
 ![Watch the video](demo_yolo_aerial_detection.mp4)
 
-![Watch the video](demo_yolo_aerial_detection.gif)
+![demo_yolo_aerial_detection](https://github.com/Ashegh-Sad-Warrior/Yolo_Aerial_Detection/blob/main/demo_yolo_aerial_detection.gif)
 
 
 ```python
