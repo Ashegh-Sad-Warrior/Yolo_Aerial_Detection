@@ -68,7 +68,7 @@ Below are the various evaluation results obtained during the training and testin
 2. **Load the model using the Ultralytics YOLO library.**
 3. **Use the model for object detection on aerial images.**
 ## Demo Video and gif
-![Watch the video](demo_yolo_aerial_detection.mp4)
+![Watch the video](https://github.com/Ashegh-Sad-Warrior/Yolo_Aerial_Detection/blob/main/demo_yolo_aerial_detection%20.mp4)
 
 ![demo_yolo_aerial_detection](https://github.com/Ashegh-Sad-Warrior/Yolo_Aerial_Detection/blob/main/demo_yolo_aerial_detection.gif)
 
